@@ -12,16 +12,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Initialize counter to 346 if it doesn't exist (one-time setup)
-    const existingCount = await kv.get('viewCount');
-    if (existingCount === null) {
-      await kv.set('viewCount', 346);
-    }
-
     if (req.method === 'GET') {
       // Get current count from KV database
-      const count = await kv.get('viewCount') || 346;
-      res.status(200).json({ count: parseInt(count) });
+      const count = await kv.get('viewCount');
+      if (count === null) {
+        // Initialize to 346 if it doesn't exist
+        await kv.set('viewCount', 346);
+        res.status(200).json({ count: 346 });
+      } else {
+        res.status(200).json({ count: parseInt(count) });
+      }
     } else if (req.method === 'POST') {
       // Increment count in KV database
       const newCount = await kv.incr('viewCount');

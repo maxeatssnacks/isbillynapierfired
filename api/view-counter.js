@@ -23,9 +23,17 @@ export default async function handler(req, res) {
         res.status(200).json({ count: parseInt(count) });
       }
     } else if (req.method === 'POST') {
-      // Increment count in KV database
-      const newCount = await kv.incr('viewCount');
-      res.status(200).json({ count: newCount });
+      // Check if counter exists, if not initialize to 346
+      const existingCount = await kv.get('viewCount');
+      if (existingCount === null) {
+        // Initialize to 346 if it doesn't exist
+        await kv.set('viewCount', 346);
+        res.status(200).json({ count: 346 });
+      } else {
+        // Increment existing count
+        const newCount = await kv.incr('viewCount');
+        res.status(200).json({ count: newCount });
+      }
     } else {
       res.setHeader('Allow', ['GET', 'POST']);
       res.status(405).end(`Method ${req.method} Not Allowed`);

@@ -8,12 +8,7 @@ function App() {
   useEffect(() => {
     const incrementViewCount = async () => {
       try {
-        // First get current count
-        const getResponse = await fetch('/api/view-counter')
-        const getData = await getResponse.json()
-        setViewCount(getData.count)
-
-        // Then increment it
+        // Just increment the count directly (POST will handle initialization)
         const postResponse = await fetch('/api/view-counter', {
           method: 'POST',
           headers: {
@@ -25,7 +20,7 @@ function App() {
       } catch (error) {
         console.error('Error updating view count:', error)
         // Fallback to localStorage if API fails
-        const currentCount = parseInt(localStorage.getItem('viewCount') || '0')
+        const currentCount = parseInt(localStorage.getItem('viewCount') || '346')
         const newCount = currentCount + 1
         setViewCount(newCount)
         localStorage.setItem('viewCount', newCount.toString())

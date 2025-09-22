@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       // Initialize only once (atomic NX) then return current value
       await redis.set('viewCount', 346, { nx: true });
       const count = await redis.get('viewCount');
-      res.status(200).json({ count: parseInt(count as any) || 346 });
+      res.status(200).json({ count: parseInt(String(count)) || 346 });
     } else if (req.method === 'POST') {
       // Initialize if absent (NX). If we just initialized, return 346; else increment.
       const wasInitialized = await redis.set('viewCount', 346, { nx: true });

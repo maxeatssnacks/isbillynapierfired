@@ -3,8 +3,8 @@ import { Redis } from '@upstash/redis';
 // Initialize Redis client with Upstash REST credentials
 // NOTE: Must use KV_REST_API_URL and KV_REST_API_TOKEN (WRITE token)
 function getRedis() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) {
     throw new Error('Missing Upstash env vars: KV_REST_API_URL / KV_REST_API_TOKEN');
   }

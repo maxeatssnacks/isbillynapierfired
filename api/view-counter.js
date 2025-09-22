@@ -12,9 +12,15 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Initialize counter to 346 if it doesn't exist (one-time setup)
+    const existingCount = await kv.get('viewCount');
+    if (existingCount === null) {
+      await kv.set('viewCount', 346);
+    }
+
     if (req.method === 'GET') {
       // Get current count from KV database
-      const count = await kv.get('viewCount') || 0;
+      const count = await kv.get('viewCount') || 346;
       res.status(200).json({ count: parseInt(count) });
     } else if (req.method === 'POST') {
       // Increment count in KV database
@@ -26,7 +32,7 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error('KV Error:', error);
-    // Fallback to a default count if KV fails
-    res.status(200).json({ count: 0 });
+    // Fallback to 346 if KV fails
+    res.status(200).json({ count: 346 });
   }
 }

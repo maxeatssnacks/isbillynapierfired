@@ -1,4 +1,10 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+// Initialize Redis client with environment variables
+const redis = new Redis({
+  url: process.env.REDIS_URL,
+  token: process.env.KV_REST_API_TOKEN,
+});
 
 export default async function handler(req, res) {
   // Enable CORS for all origins
@@ -13,25 +19,25 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      // Get current count from KV database
-      const count = await kv.get('viewCount');
+      // Get current count from Redis database
+      const count = await redis.get('viewCount');
       if (count === null) {
         // Initialize to 346 if it doesn't exist
-        await kv.set('viewCount', 346);
+        await redis.set('viewCount', 346);
         res.status(200).json({ count: 346 });
       } else {
         res.status(200).json({ count: parseInt(count) });
       }
     } else if (req.method === 'POST') {
       // Check if counter exists, if not initialize to 346
-      const existingCount = await kv.get('viewCount');
+      const existingCount = await redis.get('viewCount');
       if (existingCount === null) {
         // Initialize to 346 if it doesn't exist
-        await kv.set('viewCount', 346);
+        await redis.set('viewCount', 346);
         res.status(200).json({ count: 346 });
       } else {
         // Increment existing count
-        const newCount = await kv.incr('viewCount');
+        const newCount = await redis.incr('viewCount');
         res.status(200).json({ count: newCount });
       }
     } else {

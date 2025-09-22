@@ -1,8 +1,6 @@
-// Simple in-memory counter (resets on server restart)
-// For production, you'd want to use a database like Vercel KV, Supabase, or Firebase
-let viewCount = 0;
+import { kv } from '@vercel/kv';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   // Enable CORS for all origins
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -13,15 +11,22 @@ export default function handler(req, res) {
     return;
   }
 
-  if (req.method === 'GET') {
-    // Return current count
-    res.status(200).json({ count: viewCount });
-  } else if (req.method === 'POST') {
-    // Increment count
-    viewCount++;
-    res.status(200).json({ count: viewCount });
-  } else {
-    res.setHeader('Allow', ['GET', 'POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+  try {
+    if (req.method === 'GET') {
+      // Get current count from KV database
+      const count = await kv.get('viewCount') || 0;
+      res.status(200).json({ count: parseInt(count) });
+    } else if (req.method === 'POST') {
+      // Increment count in KV database
+      const newCount = await kv.incr('viewCount');
+      res.status(200).json({ count: newCount });
+    } else {
+      res.setHeader('Allow', ['GET', 'POST']);
+      res.status(405).end(`Method ${req.method} Not Allowed`);
+    }
+  } catch (error) {
+    console.error('KV Error:', error);
+    // Fallback to a default count if KV fails
+    res.status(200).json({ count: 0 });
   }
 }

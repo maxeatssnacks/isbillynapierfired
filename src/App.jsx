@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import AudioPlayer from './components/AudioPlayer'
 
 function App() {
   const [isFired, setIsFired] = useState(false)
@@ -39,6 +40,9 @@ function App() {
     >
       {/* Semi-transparent overlay for better text readability */}
       <div className="overlay"></div>
+
+      {/* Audio player - top left */}
+      <AudioPlayer isFired={isFired} />
 
       {/* Buy me a beer link - top right */}
       <a

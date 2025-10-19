@@ -6,39 +6,42 @@ function AudioPlayer({ isFired }) {
     const [isPlaying, setIsPlaying] = useState(false)
     const audioRef = useRef(null)
 
-    // Audio file paths - you'll need to add these files to public/audio/
+    // Audio file paths
     const audioFiles = {
-        notFired: '/audio/not-fired.mp3', // Add your "not fired" track here
-        fired: '/audio/fired.mp3'         // Add your "fired" track here
+        notFired: '/audio/not-fired.mp3',
+        fired: '/audio/fired.mp3'
     }
 
-    // Auto-play on mount if fired state
+    // Initialize audio on mount
     useEffect(() => {
-        if (isFired && audioRef.current) {
-            setHasUserInteracted(true)
+        if (audioRef.current) {
+            const currentSrc = isFired ? audioFiles.fired : audioFiles.notFired
+            audioRef.current.src = currentSrc
             audioRef.current.loop = true
-            audioRef.current.src = audioFiles.fired
             audioRef.current.load()
             
-            // Try to auto-play immediately
-            audioRef.current.play().then(() => {
-                setIsPlaying(true)
-            }).catch((error) => {
-                console.error('Auto-play failed:', error)
-                // If auto-play fails, show play button
-                setHasUserInteracted(false)
-            })
+            // If fired state, try to auto-play immediately
+            if (isFired) {
+                setHasUserInteracted(true)
+                audioRef.current.play().then(() => {
+                    setIsPlaying(true)
+                    console.log('Audio started playing automatically')
+                }).catch((error) => {
+                    console.error('Auto-play failed:', error)
+                    setHasUserInteracted(false)
+                })
+            }
         }
-    }, [isFired])
+    }, []) // Run only on mount
 
-    // Handle user interaction to enable audio (for not-fired state or if auto-play failed)
+    // Handle user interaction to enable audio
     const handleUserInteraction = async () => {
         if (!hasUserInteracted && audioRef.current) {
             setHasUserInteracted(true)
-            audioRef.current.loop = true
             try {
                 await audioRef.current.play()
                 setIsPlaying(true)
+                console.log('Audio started playing after user interaction')
             } catch (error) {
                 console.error('Audio play failed:', error)
             }
@@ -53,8 +56,10 @@ function AudioPlayer({ isFired }) {
             audioRef.current.loop = true
             audioRef.current.load()
 
-            // Auto-play the new track if user has interacted
-            audioRef.current.play().catch(console.error)
+            // Auto-play the new track
+            audioRef.current.play().then(() => {
+                console.log('Audio switched and playing')
+            }).catch(console.error)
         }
     }, [isFired, hasUserInteracted])
 
@@ -66,8 +71,24 @@ function AudioPlayer({ isFired }) {
     }
 
     // Handle audio events
-    const handleAudioPlay = () => setIsPlaying(true)
-    const handleAudioPause = () => setIsPlaying(false)
+    const handleAudioPlay = () => {
+        setIsPlaying(true)
+        console.log('Audio play event fired')
+    }
+    const handleAudioPause = () => {
+        setIsPlaying(false)
+        console.log('Audio pause event fired')
+    }
+    const handleAudioError = (e) => {
+        console.error('Audio error:', e)
+        console.error('Audio error details:', e.target.error)
+    }
+    const handleAudioLoadStart = () => {
+        console.log('Audio load started')
+    }
+    const handleAudioCanPlay = () => {
+        console.log('Audio can play')
+    }
 
     return (
         <div className="audio-player">
@@ -77,7 +98,9 @@ function AudioPlayer({ isFired }) {
                 loop
                 onPlay={handleAudioPlay}
                 onPause={handleAudioPause}
-                onError={(e) => console.error('Audio error:', e)}
+                onError={handleAudioError}
+                onLoadStart={handleAudioLoadStart}
+                onCanPlay={handleAudioCanPlay}
             >
                 <source src={isFired ? audioFiles.fired : audioFiles.notFired} type="audio/mpeg" />
                 Your browser does not support the audio element.
@@ -101,6 +124,24 @@ function AudioPlayer({ isFired }) {
                         {isMuted ? '🔇' : '🔊'}
                     </button>
                 )}
+            </div>
+            
+            {/* Debug info - remove this later */}
+            <div style={{ 
+                position: 'fixed', 
+                top: '10px', 
+                right: '10px', 
+                background: 'rgba(0,0,0,0.8)', 
+                color: 'white', 
+                padding: '10px', 
+                fontSize: '12px',
+                zIndex: 1000
+            }}>
+                <div>isFired: {isFired.toString()}</div>
+                <div>hasUserInteracted: {hasUserInteracted.toString()}</div>
+                <div>isPlaying: {isPlaying.toString()}</div>
+                <div>isMuted: {isMuted.toString()}</div>
+                <div>Audio src: {isFired ? audioFiles.fired : audioFiles.notFired}</div>
             </div>
         </div>
     )

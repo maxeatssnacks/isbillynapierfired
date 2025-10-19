@@ -20,16 +20,27 @@ function AudioPlayer({ isFired }) {
             audioRef.current.loop = true
             audioRef.current.load()
             
-            // If fired state, try to auto-play immediately
+            // If fired state, try to auto-play immediately at 9 seconds
             if (isFired) {
                 setHasUserInteracted(true)
-                audioRef.current.play().then(() => {
-                    setIsPlaying(true)
-                    console.log('Audio started playing automatically')
-                }).catch((error) => {
-                    console.error('Auto-play failed:', error)
-                    setHasUserInteracted(false)
-                })
+                // Wait for audio to be ready, then play at 9 seconds
+                const playAudio = () => {
+                    audioRef.current.currentTime = 9
+                    audioRef.current.play().then(() => {
+                        setIsPlaying(true)
+                        console.log('Audio started playing automatically at 9 seconds')
+                    }).catch((error) => {
+                        console.error('Auto-play failed:', error)
+                        setHasUserInteracted(false)
+                    })
+                }
+                
+                // Try to play immediately, or wait for canplay event
+                if (audioRef.current.readyState >= 3) { // HAVE_FUTURE_DATA
+                    playAudio()
+                } else {
+                    audioRef.current.addEventListener('canplay', playAudio, { once: true })
+                }
             }
         }
     }, []) // Run only on mount
@@ -58,7 +69,13 @@ function AudioPlayer({ isFired }) {
 
             // Auto-play the new track
             audioRef.current.play().then(() => {
-                console.log('Audio switched and playing')
+                // If switching to fired track, start at 9 seconds
+                if (isFired) {
+                    audioRef.current.currentTime = 9
+                    console.log('Audio switched to fired track, starting at 9 seconds')
+                } else {
+                    console.log('Audio switched to not-fired track')
+                }
             }).catch(console.error)
         }
     }, [isFired, hasUserInteracted])
@@ -101,9 +118,9 @@ function AudioPlayer({ isFired }) {
                 onError={handleAudioError}
                 onLoadStart={handleAudioLoadStart}
                 onCanPlay={handleAudioCanPlay}
+                style={{ display: 'none' }}
             >
                 <source src={isFired ? audioFiles.fired : audioFiles.notFired} type="audio/mpeg" />
-                Your browser does not support the audio element.
             </audio>
 
             <div className="audio-controls">
@@ -124,24 +141,6 @@ function AudioPlayer({ isFired }) {
                         {isMuted ? '🔇' : '🔊'}
                     </button>
                 )}
-            </div>
-            
-            {/* Debug info - remove this later */}
-            <div style={{ 
-                position: 'fixed', 
-                top: '10px', 
-                right: '10px', 
-                background: 'rgba(0,0,0,0.8)', 
-                color: 'white', 
-                padding: '10px', 
-                fontSize: '12px',
-                zIndex: 1000
-            }}>
-                <div>isFired: {isFired.toString()}</div>
-                <div>hasUserInteracted: {hasUserInteracted.toString()}</div>
-                <div>isPlaying: {isPlaying.toString()}</div>
-                <div>isMuted: {isMuted.toString()}</div>
-                <div>Audio src: {isFired ? audioFiles.fired : audioFiles.notFired}</div>
             </div>
         </div>
     )

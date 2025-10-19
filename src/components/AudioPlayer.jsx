@@ -19,29 +19,6 @@ function AudioPlayer({ isFired }) {
             audioRef.current.src = currentSrc
             audioRef.current.loop = true
             audioRef.current.load()
-            
-            // If fired state, try to auto-play immediately at 9 seconds
-            if (isFired) {
-                setHasUserInteracted(true)
-                // Wait for audio to be ready, then play at 9 seconds
-                const playAudio = () => {
-                    audioRef.current.currentTime = 9
-                    audioRef.current.play().then(() => {
-                        setIsPlaying(true)
-                        console.log('Audio started playing automatically at 9 seconds')
-                    }).catch((error) => {
-                        console.error('Auto-play failed:', error)
-                        setHasUserInteracted(false)
-                    })
-                }
-                
-                // Try to play immediately, or wait for canplay event
-                if (audioRef.current.readyState >= 3) { // HAVE_FUTURE_DATA
-                    playAudio()
-                } else {
-                    audioRef.current.addEventListener('canplay', playAudio, { once: true })
-                }
-            }
         }
     }, []) // Run only on mount
 
@@ -50,9 +27,13 @@ function AudioPlayer({ isFired }) {
         if (!hasUserInteracted && audioRef.current) {
             setHasUserInteracted(true)
             try {
+                // If fired state, start at 9 seconds
+                if (isFired) {
+                    audioRef.current.currentTime = 9
+                }
                 await audioRef.current.play()
                 setIsPlaying(true)
-                console.log('Audio started playing after user interaction')
+                console.log(`Audio started playing after user interaction${isFired ? ' at 9 seconds' : ''}`)
             } catch (error) {
                 console.error('Audio play failed:', error)
             }
@@ -124,13 +105,13 @@ function AudioPlayer({ isFired }) {
             </audio>
 
             <div className="audio-controls">
-                {!hasUserInteracted && !isFired ? (
+                {!hasUserInteracted ? (
                     <button
                         className="audio-button play"
                         onClick={handleUserInteraction}
-                        title="Click to enable audio"
+                        title={isFired ? "Click to start music at 9 seconds" : "Click to enable audio"}
                     >
-                        ▶️
+                        {isFired ? "🎵 Start Music" : "▶️"}
                     </button>
                 ) : (
                     <button

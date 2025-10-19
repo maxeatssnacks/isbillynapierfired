@@ -109,9 +109,9 @@ function AudioPlayer({ isFired }) {
                     <button
                         className="audio-button play"
                         onClick={handleUserInteraction}
-                        title={isFired ? "Click to start music at 9 seconds" : "Click to enable audio"}
+                        title="Click to enable audio"
                     >
-                        {isFired ? "🎵 Start Music" : "▶️"}
+                        ▶️
                     </button>
                 ) : (
                     <button

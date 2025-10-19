@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import AudioPlayer from './components/AudioPlayer'
 
 function App() {
-  const [isFired, setIsFired] = useState(false)
+  const [isFired, setIsFired] = useState(true)
   const [viewCount, setViewCount] = useState(0)
 
   // Load and increment view count on component mount

@@ -12,7 +12,26 @@ function AudioPlayer({ isFired }) {
         fired: '/audio/fired.mp3'         // Add your "fired" track here
     }
 
-    // Handle user interaction to enable audio
+    // Auto-play on mount if fired state
+    useEffect(() => {
+        if (isFired && audioRef.current) {
+            setHasUserInteracted(true)
+            audioRef.current.loop = true
+            audioRef.current.src = audioFiles.fired
+            audioRef.current.load()
+            
+            // Try to auto-play immediately
+            audioRef.current.play().then(() => {
+                setIsPlaying(true)
+            }).catch((error) => {
+                console.error('Auto-play failed:', error)
+                // If auto-play fails, show play button
+                setHasUserInteracted(false)
+            })
+        }
+    }, [isFired])
+
+    // Handle user interaction to enable audio (for not-fired state or if auto-play failed)
     const handleUserInteraction = async () => {
         if (!hasUserInteracted && audioRef.current) {
             setHasUserInteracted(true)
@@ -65,7 +84,7 @@ function AudioPlayer({ isFired }) {
             </audio>
 
             <div className="audio-controls">
-                {!hasUserInteracted ? (
+                {!hasUserInteracted && !isFired ? (
                     <button
                         className="audio-button play"
                         onClick={handleUserInteraction}
